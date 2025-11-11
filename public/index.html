@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moolre Inline Payment Demo</title>
+
+  <!-- Prism.js Syntax Highlighting -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f9fafc;
+      color: #222;
+      margin: 0;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 48px;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    h1 {
+      text-align: center;
+      color: #ffbc38;
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+
+    p.subtitle {
+      text-align: center;
+      color: #555;
+      margin-bottom: 50px;
+      font-size: 16px;
+    }
+
+    .section {
+      margin-bottom: 60px;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+      color: #111;
+      font-size: 22px;
+    }
+
+    p {
+      color: #555;
+      margin-bottom: 20px;
+      font-size: 15px;
+    }
+
+    button {
+      padding: 12px 28px;
+      background: #142a4a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background: #005fd4;
+    }
+
+    pre {
+      border-radius: 10px;
+      overflow-x: auto;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      color: #777;
+      margin-top: 40px;
+      font-size: 13px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .tagline {
+      font-size: 14px;
+      color: #666;
+      background: #f1f3f6;
+      padding: 10px 14px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+
+    .callback-list {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      padding: 16px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .callback-list strong {
+      color: #142a4a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Moolre Inline Payment Demo</h1>
+    <p class="subtitle">Seamless, secure, and lightning-fast payments — all inside your website.</p>
+
+    <!-- Checkout Example -->
+    <div class="section">
+      <span class="tagline">Basic Integration</span>
+      <h2>Standard Checkout</h2>
+      <p>
+        Use <code>popup.checkout()</code> to trigger a secure payment popup.  
+        Perfect for simple one-time payments — with automatic event handling.
+      </p>
+
+      <div class="btn-row">
+        <button id="checkoutBtn">Pay GHS 50</button>
+      </div>
+
+<pre><code class="language-javascript">
+// Include Moolre script
+// &lt;script src="https://moolre-inline-js.vercel.app/v1/inline.js"&gt;&lt;/script&gt;
+
+const popup = new MoolrePay();
+
+document.getElementById("checkoutBtn").addEventListener("click", () => {
+  popup.checkout({
+    publicKey: "MOOLRE_PUBLIC_KEY",
+    accountNumber: "MOOLRE_ACCOUNT_NUMBER",
+    amount: 50,
+    currency: "GHS",
+    email: "customer@moolre.com",
+    externalRef: "trx_" + Date.now(),
+    onLoad: () => console.log("💡 Checkout loaded"),
+    onSuccess: (res) => console.log("✅ Payment success:", res),
+    onCancel: () => console.log("❌ Payment cancelled"),
+    onError: (err) => console.error("⚠️ Payment error:", err),
+    onClose: () => console.log("👋 Checkout closed"),
+  });
+});
+</code></pre>
+    </div>
+
+    <!-- Preload Example -->
+    <div class="section">
+      <span class="tagline">⚡ Faster Experience</span>
+      <h2>Preload Transaction</h2>
+      <p>
+        Use <code>popup.preloadTransaction()</code> to load the payment popup in the background —  
+        so when the user clicks “Pay”, it opens instantly.
+      </p>
+
+      <div class="btn-row">
+        <button id="preloadBtn">Preload Payment</button>
+        <button id="openPreloadedBtn" disabled>Open Preloaded Payment</button>
+      </div>
+
+<pre><code class="language-javascript">
+const popup = new MoolrePay();
+let openPayment = null;
+
+document.getElementById("preloadBtn").addEventListener("click", async () => {
+  try {
+    openPayment = await popup.preloadTransaction({
+      publicKey: "MOOLRE_PUBLIC_KEY",
+      accountNumber: "MOOLRE_ACCOUNT_NUMBER",
+      amount: 3,
+      email: "customer@moolre.com",
+      currency: "GHS",
+      externalRef: "trx_" + Date.now(),
+      onLoad: () => console.log("💡 Checkout loaded (preload)"),
+      onSuccess: (res) => console.log("✅ Payment success:", res),
+      onCancel: () => console.log("❌ Payment cancelled"),
+      onError: (err) => console.error("⚠️ Error:", err),
+      onClose: () => console.log("👋 Checkout closed"),
+    });
+
+    document.getElementById("openPreloadedBtn").disabled = false;
+    console.log("✅ Preload successful!");
+  } catch (err) {
+    console.error("❌ Preload failed:", err);
+  }
+});
+
+document.getElementById("openPreloadedBtn").addEventListener("click", () => {
+  if (typeof openPayment === "function") openPayment();
+});
+</code></pre>
+    </div>
+
+    <!-- Callbacks Section -->
+    <div class="section">
+      <span class="tagline">🧠 Developer Reference</span>
+      <h2>Available Event Callbacks</h2>
+      <p>Every Moolre checkout supports event callbacks for fine-grained control:</p>
+
+      <div class="callback-list">
+        <p><strong>onLoad:</strong> Fired when the checkout iframe fully loads.</p>
+        <p><strong>onSuccess:</strong> Triggered when payment completes successfully.</p>
+        <p><strong>onCancel:</strong> Runs when the user closes or cancels checkout.</p>
+        <p><strong>onError:</strong> Captures failed transactions or API errors.</p>
+        <p><strong>onClose:</strong> Called after the modal completely closes.</p>
+      </div>
+    </div>
+
+    <footer>© <span id="year"></span> Moolre Payments. All rights reserved.</footer>
+  </div>
+
+  <!-- Demo Script -->
+  <script src="https://moolre-inline-js.vercel.app/v1/inline.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    const popup = new MoolrePay();
+
+    // --- Checkout Example ---
+    document.getElementById("checkoutBtn").onclick = () => {
+      popup.checkout({
+        publicKey: "MOOLRE_PUBLIC_KEY",
+        accountNumber: "MOOLRE_ACCOUNT_NUMBER",
+        amount: 5,
+        currency: "GHS",
+        email: "customer@moolre.com",
+        externalRef: "trx_" + Date.now(),
+        onLoad: () => console.log("💡 Checkout loaded"),
+        onSuccess: (res) => console.log("✅ Payment success:", res),
+        onCancel: () => console.log("❌ Payment cancelled"),
+        onError: (err) => { console.error("⚠️ Payment error:", err); alert("Payment failed: " + err.message); },
+        onClose: () => console.log("👋 Checkout closed"),
+      });
+    };
+
+    // --- Preload Example ---
+    let openPayment = null;
+    document.getElementById("preloadBtn").onclick = async () => {
+      try {
+        document.getElementById("preloadBtn").innerText = "Loading...";
+        openPayment = await popup.preloadTransaction({
+          publicKey: "MOOLRE_PUBLIC_KEY",
+          accountNumber: "MOOLRE_ACCOUNT_NUMBER",
+          amount: 3,
+          currency: "GHS",
+          email: "customer@moolre.com",
+          externalRef: "trx_" + Date.now(),
+          onLoad: () => console.log("💡 Checkout loaded (preload)"),
+          onSuccess: (res) => console.log("✅ Payment success:", res),
+          onCancel: () => console.log("❌ Payment cancelled"),
+          onError: (err) => { console.error("⚠️ Error:", err); alert("Payment failed: " + err.message); },
+          onClose: () => console.log("👋 Checkout closed"),
+        });
+        document.getElementById("openPreloadedBtn").disabled = false;
+        document.getElementById("preloadBtn").innerText = "Preload Payment";
+      } catch (e) {
+        console.error("❌ Preload failed:", e);
+      }
+    };
+
+    document.getElementById("openPreloadedBtn").onclick = () => {
+      if (typeof openPayment === "function") openPayment();
+      else alert("Preload not ready yet.");
+    };
+  </script>
+</body>
+</html>
