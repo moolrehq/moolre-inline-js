@@ -9,11 +9,6 @@
  *  - onError(error)
  *  - onCancel()
  *  - onClose()
- *
- * Notes:
- *  - API endpoint used: config.apiBase + '/link' (POST). Header: X-Api-Pubkey
- *  - If options.paymentUrl is provided, it will be used directly without calling API.
- *  - You can call setup({ publicKey, accountNumber, apiBase, checkoutBase }) to set defaults.
  */
 
 (function (root, factory) {
@@ -31,7 +26,7 @@
     constructor(defaults = {}) {
       this.defaults = {
         apiBase: "https://api.moolre.com/embed",
-        checkoutBase: "https://pos.moolre.com", // used if you need to build direct checkout urls
+        checkoutBase: "https://pos.moolre.com",
         publicKey: null,
         accountNumber: null,
         iframeHeight: "630px",
@@ -41,7 +36,7 @@
       this.overlay = null;
       this.iframe = null;
       this._listener = null;
-      this._preloaded = null; // { url, iframe } if preloadTransaction was called
+      this._preloaded = null;
       this._styleElem = null;
       this._installGlobalStyles();
     }
@@ -347,7 +342,7 @@
         overflow: hidden;
       `;
 
-      // Iframe element - SCROLL BARS REMOVED
+      // Iframe element
       const iframe = document.createElement("iframe");
       iframe.src = url;
       iframe.className = "moolre-iframe";
