@@ -1,6 +1,6 @@
 {
   "name": "@moolre/inline-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Moolre Inline JavaScript SDK for seamless payments",
   "main": "./src/inline.js",
   "browser": "./public/v1/inline.js",
