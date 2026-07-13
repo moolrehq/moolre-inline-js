@@ -1,196 +1,112 @@
 # Moolre Inline JavaScript SDK
 
-The **Moolre Inline SDK** provides an easy, secure, and seamless way to collect payments directly on your website or app without redirection.  
-It powers the same payment flow as **Moolre Pay**, allowing developers to start and complete transactions in a single embedded popup.
+Use the Moolre Inline SDK to create a payment link and show the Moolre checkout in a modal.
 
----
-
-## 🚀 Quickstart
-
-### 1️⃣ Add the script directly to your website:
-
-```html
-<script src="https://js.moolre.com/v1/inline.js"></script>
-```
-
-### 2️⃣ Or install via npm:
+## Install
 
 ```bash
 npm install @moolre/inline-js
 ```
 
-### 3️⃣ Then import and use it:
+## Quick start
 
 ```js
 import MoolrePay from "@moolre/inline-js";
 
 const popup = new MoolrePay();
 
-popup.checkout({{
+await popup.checkout({
+  username: "MOOLRE_USERNAME",
   publicKey: "MOOLRE_PUBLIC_KEY",
   accountNumber: "MOOLRE_ACCOUNT_NUMBER",
   amount: 50,
-  externalRef: "unique_ref_123",
+  email: "customer@example.com",
+  externalRef: `order_${Date.now()}`,
   currency: "GHS",
-  onLoad: () => console.log("💡 Checkout loaded"),
-  onSuccess: (res) => console.log("✅ Payment success:", res),
-  onCancel: () => console.log("❌ Cancelled"),
-  onError: (err) => console.error("💥 Error:", err),
-}});
-```
-
----
-
-## ⚙️ The MoolrePay Object
-
-### 🔹 setup(options)
-
-Optional. Set global defaults (e.g., public key, account number) so you don’t repeat them in every call.
-
-```js
-const popup = new MoolrePay();
-
-popup.setup({{
-  publicKey: "MOOLRE_PUBLIC_KEY",
-  accountNumber: "MOOLRE_ACCOUNT_NUMBER",
-}});
-```
-
-Any subsequent calls to `checkout()` or `preloadTransaction()` will use these defaults automatically.
-
----
-
-### 🔹 checkout(options)
-
-Starts a new asynchronous transaction by calling Moolre’s API to create a payment link, then automatically opens the secure inline payment modal.
-
-```js
-const popup = new MoolrePay();
-
-popup.checkout({{
-  publicKey: "MOOLRE_PUBLIC_KEY",
-  accountNumber: "MOOLRE_ACCOUNT_NUMBER",
-  amount: 20,
-  externalRef: "MLR_123456",
-  currency: "GHS",
-  callbackUrl: "https://example.com/callback",
-  onLoad: (info) => console.log("Loaded:", info),
-  onSuccess: (res) => console.log("Payment completed:", res),
+  onSuccess: (transaction) => console.log("Payment completed", transaction),
   onCancel: () => console.log("Payment cancelled"),
-  onError: (err) => console.error("Error:", err),
-}});
+  onError: (error) => console.error("Payment error", error),
+});
 ```
 
----
+The SDK automatically sends your `username` as `X-API-USER` and your `publicKey` as `X-Api-Pubkey` when it creates a payment link.
 
-### 🔹 preloadTransaction(options)
+## Set defaults
 
-Creates a transaction ahead of time (via Moolre API) but does not open the modal immediately.  
-Instead, it returns a function that can be called later to open the payment popup instantly.
+Set merchant details once if you create more than one checkout.
 
 ```js
-const popup = new MoolrePay();
+import MoolrePay from "@moolre/inline-js";
 
-const loadPayment = await popup.preloadTransaction({{
+const popup = new MoolrePay({
+  username: "MOOLRE_USERNAME",
   publicKey: "MOOLRE_PUBLIC_KEY",
   accountNumber: "MOOLRE_ACCOUNT_NUMBER",
-  amount: 25,
-  externalRef: "MY_ORDER_001",
-  currency: "GHS",
-  onLoad: () => console.log("✅ Payment preloaded"),
-  onSuccess: (res) => console.log("Payment completed:", res),
-  onCancel: () => console.log("Payment cancelled"),
-  onError: (err) => console.error("❌ Error:", err),
-}});
+});
 
-// Attach to a button
-document.querySelector("#pay-now").onclick = loadPayment;
+await popup.checkout({
+  amount: 50,
+  email: "customer@example.com",
+  externalRef: "order_123",
+});
 ```
 
-💡 **Tip:** This is great for smoother UX — preload the form while the user reviews their cart or enters details, then open instantly when they’re ready.
+You can also use `popup.setup({ ... })`. Values passed to `checkout()` or `preloadTransaction()` override the defaults.
 
----
+## Preload checkout
 
-## 🔹 Supported Options
+```js
+const openPayment = await popup.preloadTransaction({
+  amount: 50,
+  email: "customer@example.com",
+  externalRef: "order_123",
+});
 
-| Option | Required | Type | Description |
-|:--|:--:|:--|:--|
-| publicKey | ✅ | string | Your Moolre public API key |
-| accountNumber | ✅ | string | Merchant account number |
-| amount | ✅ | number | Payment amount (in base currency) |
-| currency | ❌ | string | Currency code, e.g. `"GHS"`, `"NGN"` |
-| email | ❌ | string | Customer email (optional) |
-| metadata | ❌ | object | Extra information for your records |
-| callbackUrl | ❌ | string | Where to redirect or send updates after success |
-| redirectUrl | ❌ | string | Optional redirect for browser completion |
-| mode | ❌ | string | `"payment"` (default) or `"donation"` |
-| externalRef | ✅ | string | Custom reference for your transaction |
-
----
-
-## 🔹 Callback Events
-
-| Callback | Description | Example Parameters |
-|:--|:--|:--|
-| onLoad | Triggered when iframe is loaded | `{{ message: "Iframe loaded" }}` |
-| onSuccess | Called when a transaction completes successfully | `{{ status: "success", reference: "MLR_XXXX" }}` |
-| onCancel | When user closes the popup | `undefined` |
-| onError | On any error (network or validation) | `{{ message: "Error message" }}` |
-
----
-
-## 🔹 Example: Full Flow with Preload
-
-```html
-<button id="start-payment">Pay Now</button>
-
-<script src="https://js.moolre.com/v1/inline.js"></script>
-<script>
-  const popup = new MoolrePay();
-
-  async function init() {{
-    const openPayment = await popup.preloadTransaction({{
-      publicKey: "MOOLRE_PUBLIC_KEY",
-      accountNumber: "MOOLRE_ACCOUNT_NUMBER",
-      amount: 30,
-      externalRef: "COURSE_2025_01",
-      onLoad: () => console.log("Payment preloaded"),
-      onSuccess: (tx) => console.log("Paid:", tx),
-      onCancel: () => console.log("Payment cancelled"),
-      onError: (err) => console.error(err),
-    }});
-
-    document.querySelector("#start-payment").onclick = openPayment;
-  }}
-
-  init();
-</script>
+document.querySelector("#pay-now").addEventListener("click", openPayment);
 ```
 
----
+## Options
 
-## 🧩 Browser Support
+| Option | Required when creating a link | Description |
+| --- | --- | --- |
+| `username` | Yes | Your Moolre username. Sent as `X-API-USER`. |
+| `publicKey` | Yes | Your Moolre public API key. |
+| `accountNumber` | Yes | Merchant account number. |
+| `amount` | Yes | Payment amount. |
+| `email` | Yes | Customer email address. |
+| `externalRef` | Yes | Unique transaction reference. |
+| `currency` | No | Currency code. Defaults to `GHS`. |
+| `metadata` | No | Extra payment metadata. |
+| `callbackUrl` | No | Callback URL for payment updates. |
+| `redirectUrl` | No | URL to redirect to after completion. |
+| `mode` | No | Payment mode. Defaults to `payment`. |
+| `reusable` | No | Whether the generated link can be reused. |
+| `iframeHeight` | No | Checkout modal height. Defaults to `630px`. |
+| `allowedOrigins` | No | Origins allowed to send checkout events. Defaults to Moolre subdomains. |
+| `paymentUrl` | No | Existing payment URL. When supplied, the SDK does not call the link API and API credentials are not required. |
 
-✅ Chrome, Safari, Edge, Firefox  
-✅ Android 5.0+ native browser  
-🚫 Not supported on Opera Mini or browsers with JavaScript disabled
+## Events
 
----
+| Callback | When it runs |
+| --- | --- |
+| `onLoad` | The checkout iframe has loaded. |
+| `onSuccess` | Payment succeeds. |
+| `onError` | Validation, network, or payment errors occur. |
+| `onCancel` | The customer closes or cancels the checkout. |
+| `onClose` | The modal is manually closed. |
 
-## 🔐 Security
+## Browser and API requirements
 
-All transactions are encrypted using **TLS 1.2+** and processed securely on Moolre’s servers.  
-Your public key and account information are safe and never expose private credentials.
+This package is intended for browser applications bundled with a tool such as Vite, Webpack, or Rollup. The minified browser asset is included at `public/v1/inline.js`; copy it to your own static assets if you need to load it with a script tag.
 
----
+The Moolre API must allow browser preflight requests to `POST /embed/link`, including these request headers:
 
-## 🧠 Developer Tips
+```http
+Access-Control-Allow-Headers: Content-Type, X-API-USER, X-Api-Pubkey
+```
 
-- Use `preloadTransaction()` for fast-loading checkouts in dynamic apps.  
-- Use `checkout()` for immediate modal payments.  
-- Set global defaults once using `setup()` to avoid repetition.  
-- Always handle `onSuccess` and `onError` callbacks gracefully.  
+`username` and `publicKey` are client-side identifiers. Never include a Moolre private key in browser code.
 
----
+## License
 
-🗓️ **Last Updated:** 2025-10-28 23:28 UTC
+MIT. See [LICENSE](LICENSE).

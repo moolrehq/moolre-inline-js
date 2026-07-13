@@ -2,18 +2,29 @@
   "name": "@moolre/inline-js",
   "version": "1.0.0",
   "description": "Moolre Inline JavaScript SDK for seamless payments",
-  "main": "src/inline.js",
-  "browser": "public/v1/inline.js",
+  "main": "./src/inline.js",
+  "browser": "./public/v1/inline.js",
+  "exports": {
+    ".": {
+      "browser": "./public/v1/inline.js",
+      "default": "./src/inline.js"
+    }
+  },
+  "files": ["src", "public/v1", "README.md", "LICENSE"],
   "keywords": ["moolre", "payments", "inline", "sdk", "checkout"],
   "scripts": {
-    "dev": "vercel dev",
-    "build": "cp src/inline.js public/v1/inline.js",
-    "deploy": "npm run build && vercel --prod"
+    "build": "npx --yes terser@5.49.0 src/inline.js --compress --mangle --format comments=false --output public/v1/inline.js",
+    "prepack": "npm run build"
   },
   "author": "Moolre Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/moolre/inline-js"
+    "url": "https://github.com/moolrehq/moolre-inline-js.git"
+  },
+  "bugs": "https://github.com/moolrehq/moolre-inline-js/issues",
+  "homepage": "https://github.com/moolrehq/moolre-inline-js#readme",
+  "engines": {
+    "node": ">=18"
   }
 }

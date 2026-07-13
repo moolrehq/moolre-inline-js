@@ -27,6 +27,7 @@
       this.defaults = {
         apiBase: "https://api.moolre.com/embed",
         checkoutBase: "https://pos.moolre.com",
+        username: null,
         publicKey: null,
         accountNumber: null,
         iframeHeight: "630px",
@@ -42,7 +43,7 @@
     }
 
     /**
-     * Optional: set defaults so callers don't have to pass publicKey/accountNumber everywhere
+     * Optional: set defaults so callers don't have to pass username/publicKey/accountNumber everywhere.
      */
     setup(opts = {}) {
       Object.assign(this.defaults, opts);
@@ -57,7 +58,8 @@
     /**
      * checkout(options): async
      * Creates payment link via API (unless options.paymentUrl provided), opens modal.
-     * options must contain either options.paymentUrl OR { publicKey, accountNumber, amount, email } (email required for async)
+     * options must contain either options.paymentUrl OR
+     * { username, publicKey, accountNumber, amount, email, externalRef }.
      */
     async checkout(options = {}) {
       const opts = this._mergeOptions(options);
@@ -194,35 +196,34 @@
      */
 
     _mergeOptions(options) {
-      // prefer per-call keys, fall back to defaults from setup()
-      return Object.assign({}, {
-        publicKey: this.defaults.publicKey,
-        accountNumber: this.defaults.accountNumber,
-        apiBase: this.defaults.apiBase,
-        checkoutBase: this.defaults.checkoutBase,
-        iframeHeight: this.defaults.iframeHeight,
-      }, options);
+      // Prefer per-call values, then fall back to defaults from the constructor or setup().
+      return Object.assign({}, this.defaults, options);
     }
 
     _validateForCheckout(opts) {
-      if (!opts.paymentUrl && !opts.publicKey) throw new Error("publicKey is required for checkout");
-      if (!opts.paymentUrl && !opts.accountNumber) throw new Error("accountNumber is required for checkout");
-      if (!opts.paymentUrl && !opts.externalRef) throw new Error("External reference is required for checkout");
+      if (opts.paymentUrl) return;
+      if (!opts.username) throw new Error("username is required for checkout");
+      if (!opts.publicKey) throw new Error("publicKey is required for checkout");
+      if (!opts.accountNumber) throw new Error("accountNumber is required for checkout");
+      if (!opts.externalRef) throw new Error("External reference is required for checkout");
       if (!opts.amount && opts.amount !== 0) throw new Error("amount is required");
+      if (!opts.email) throw new Error("email is required for checkout");
     }
 
     _validateForPreload(opts) {
-      // same validation as checkout (we need enough to create a link)
-      if (!opts.paymentUrl && !opts.publicKey) throw new Error("publicKey is required for preloadTransaction");
-      if (!opts.paymentUrl && !opts.accountNumber) throw new Error("accountNumber is required for preloadTransaction");
-      if (!opts.paymentUrl && !opts.externalRef) throw new Error("External reference is required for preloadTransaction");
+      if (opts.paymentUrl) return;
+      if (!opts.username) throw new Error("username is required for preloadTransaction");
+      if (!opts.publicKey) throw new Error("publicKey is required for preloadTransaction");
+      if (!opts.accountNumber) throw new Error("accountNumber is required for preloadTransaction");
+      if (!opts.externalRef) throw new Error("External reference is required for preloadTransaction");
       if (!opts.amount && opts.amount !== 0) throw new Error("amount is required");
+      if (!opts.email) throw new Error("email is required for preloadTransaction");
     }
 
     /**
      * Resolves payment URL:
      * - if options.paymentUrl provided -> returns it
-     * - else POST to `${opts.apiBase}/link` with required payload and X-Api-Pubkey header -> returns data.data.authorization_url
+     * - else POST to `${opts.apiBase}/link` with required payload and API headers -> returns data.data.authorization_url
      */
     async _resolvePaymentUrl(opts) {
       if (opts.paymentUrl) return opts.paymentUrl;
@@ -246,6 +247,7 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-API-USER": opts.username,
           "X-Api-Pubkey": opts.publicKey,
         },
         body: JSON.stringify(payload),
@@ -453,7 +455,7 @@
       // Handle messages from iframe
       this._listener = (event) => {
         const allowed = handlers.allowedOrigins ?? [".moolre.com"];
-        const originOk = allowed.some(o => event.origin.includes(o));
+        const originOk = this._isAllowedOrigin(event.origin, allowed);
         if (!originOk) return;
 
         const data = event.data;
@@ -714,6 +716,31 @@
       `;
       document.head.appendChild(style);
       this._styleElem = style;
+    }
+
+    _isAllowedOrigin(origin, allowedOrigins) {
+      let eventUrl;
+      try {
+        eventUrl = new URL(origin);
+      } catch (e) {
+        return false;
+      }
+
+      return allowedOrigins.some((allowedOrigin) => {
+        if (typeof allowedOrigin !== "string") return false;
+
+        if (allowedOrigin.startsWith(".")) {
+          const domain = allowedOrigin.slice(1).toLowerCase();
+          const hostname = eventUrl.hostname.toLowerCase();
+          return hostname === domain || hostname.endsWith(`.${domain}`);
+        }
+
+        try {
+          return eventUrl.origin === new URL(allowedOrigin).origin;
+        } catch (e) {
+          return false;
+        }
+      });
     }
 
     _isColorDark(color) {
