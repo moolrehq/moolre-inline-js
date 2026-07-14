@@ -1,19 +1,19 @@
 {
-  "name": "@moolre/inline-js",
-  "version": "1.0.1",
+  "name": "@moolre/moolrejs",
+  "version": "1.0.2",
   "description": "Moolre Inline JavaScript SDK for seamless payments",
-  "main": "./src/inline.js",
-  "browser": "./public/v1/inline.js",
+  "main": "./src/moolre.js",
+  "browser": "./public/v1/moolre.js",
   "exports": {
     ".": {
-      "browser": "./public/v1/inline.js",
-      "default": "./src/inline.js"
+      "browser": "./public/v1/moolre.js",
+      "default": "./src/moolre.js"
     }
   },
   "files": ["src", "public/v1", "README.md", "LICENSE"],
   "keywords": ["moolre", "payments", "inline", "sdk", "checkout"],
   "scripts": {
-    "build": "npx --yes terser@5.49.0 src/inline.js --compress --mangle --format comments=false --output public/v1/inline.js",
+    "build": "npx --yes terser@5.49.0 src/moolre.js --compress --mangle --format comments=false --output public/v1/moolre.js",
     "prepack": "npm run build"
   },
   "author": "Moolre Team",

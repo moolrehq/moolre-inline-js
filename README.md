@@ -5,13 +5,13 @@ Use the Moolre Inline SDK to create a payment link and show the Moolre checkout 
 ## Install
 
 ```bash
-npm install @moolre/inline-js
+npm install @moolre/moolrejs
 ```
 
 ## Quick start
 
 ```js
-import MoolrePay from "@moolre/inline-js";
+import MoolrePay from "@moolre/moolrejs";
 
 const popup = new MoolrePay();
 
@@ -36,7 +36,7 @@ The SDK automatically sends your `username` as `X-API-USER` and your `publicKey`
 Set merchant details once if you create more than one checkout.
 
 ```js
-import MoolrePay from "@moolre/inline-js";
+import MoolrePay from "@moolre/moolrejs";
 
 const popup = new MoolrePay({
   username: "MOOLRE_USERNAME",
@@ -97,7 +97,7 @@ document.querySelector("#pay-now").addEventListener("click", openPayment);
 
 ## Browser and API requirements
 
-This package is intended for browser applications bundled with a tool such as Vite, Webpack, or Rollup. The minified browser asset is included at `public/v1/inline.js`; copy it to your own static assets if you need to load it with a script tag.
+This package is intended for browser applications bundled with a tool such as Vite, Webpack, or Rollup. The minified browser asset is included at `public/v1/moolre.js`; copy it to your own static assets if you need to load it with a script tag.
 
 The Moolre API must allow browser preflight requests to `POST /embed/link`, including these request headers:
 
