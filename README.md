@@ -29,8 +29,6 @@ await popup.checkout({
 });
 ```
 
-The SDK automatically sends your `username` as `X-API-USER` and your `publicKey` as `X-Api-Pubkey` when it creates a payment link.
-
 ## Set defaults
 
 Set merchant details once if you create more than one checkout.
